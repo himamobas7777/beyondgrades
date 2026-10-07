@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Beyond Grades | فرص لبناء Student Profile أقوى للطلاب العرب</title>
+<meta name="description" content="منح، مسابقات، كورسات، أبحاث وتطوع. فرص حقيقية تساعد الطالب العربي يبني Profile يعبّر عنه.">
+<meta property="og:title" content="Beyond Grades">
+<meta property="og:description" content="مش درجاتك وبس. فرص تبني بيها Student Profile أقوى.">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<style>
+:root{--bg:#F3F6FB;--card:#fff;--ink:#0F1E3D;--mute:#5B6B86;--line:#D9E1EE;--acc:#0B8F8F;--hi:#F2B134}
+@media (prefers-color-scheme:dark){:root{--bg:#0C1730;--card:#14233F;--ink:#EAF0FA;--mute:#9FB0CC;--line:#243658;--acc:#35C2C2}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans Arabic",system-ui,sans-serif;line-height:1.7}
+main{max-width:680px;margin:0 auto;padding:20px 16px 48px}
+header{display:flex;justify-content:space-between;align-items:center;gap:8px}
+h1{font-size:1.9rem;margin:0}.sub{color:var(--mute);margin:4px 0 16px}
+button,input,select{font:inherit;color:inherit}
+.chip,.btn{border:1.5px solid var(--line);background:var(--card);border-radius:999px;padding:6px 14px;cursor:pointer}
+.chip[aria-pressed=true]{background:var(--acc);border-color:var(--acc);color:#fff}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:10px}.chip{white-space:nowrap;font-size:.9rem}
+.btn.p{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:700}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px}
+.card h3{margin:0 0 4px;font-size:1.05rem}.meta{color:var(--mute);font-size:.88rem}.on{border-color:var(--acc)}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
+form{display:grid;gap:8px}input,select{padding:10px;border:1.5px solid var(--line);border-radius:10px;background:var(--bg);width:100%}
+.note{color:var(--mute);text-align:center;padding:20px}a{color:var(--acc)}
+button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
+</style>
+</head>
+<body>
+<main>
+<header><h1>Beyond Grades 🎓</h1><button class="btn p" id="auth">دخول بجوجل</button></header>
+<p class="sub">مش درجاتك وبس. فرص حقيقية تبني بيها Profile أقوى.</p>
+<div class="chips" id="chips"></div>
+<input id="q" placeholder="ابحث بالمكان أو الاسم (مثلًا: القاهرة، أونلاين)" style="margin-bottom:10px">
+<div id="admin"></div>
+<div id="list"><p class="note">بنحمّل الفرص...</p></div>
+</main>
+<script>
+var CFG={url:"https://oijvltkasefxyirxldnv.supabase.co",key:"sb_publishable_1rhCmiNOmAMokGg7nclUOA_1gYgHS3S",admin:"basionyibrahim86@gmail.com"};
+var CATS=['Activities & Volunteering','Research & Projects','Competitions & Leadership','Courses & Certifications','Scholarships & University'];
+var ICON=['📌','🔬','🏆','📚','🌍'];
+var sb=supabase.createClient(CFG.url,CFG.key),$=function(i){return document.getElementById(i)};
+var opps=[],done={},cat=-1,user=null,isAdmin=false;
+function h(t,a,k){var e=document.createElement(t);for(var x in a||{})e[x]=a[x];(k||[]).forEach(function(c){e.append(c)});return e}
+function safe(u){return/^https?:\/\//i.test(u||'')?u:null}
+function chips(){var c=$('chips');c.textContent='';[['الكل',-1]].concat(CATS.map(function(n,i){return[ICON[i]+' '+n,i]})).forEach(function(p){
+var b=h('button',{className:'chip',textContent:p[0]});b.setAttribute('aria-pressed',cat===p[1]);b.onclick=function(){cat=p[1];chips();render()};c.append(b)})}
+function render(){var L=$('list'),q=$('q').value.trim().toLowerCase();L.textContent='';
+var f=opps.filter(function(o){return(cat<0||o.cat===cat)&&(!q||(o.title+' '+o.place).toLowerCase().indexOf(q)>-1)});
+if(!f.length){L.append(h('p',{className:'note',textContent:opps.length?'مفيش نتايج بالفلتر ده.':'لسه مفيش فرص منشورة.'}));return}
+f.forEach(function(o){var d=!!done[o.id],r=h('div',{className:'row'}),u=safe(o.url);
+if(u)r.append(h('a',{href:u,target:'_blank',rel:'noopener',textContent:'التفاصيل'}));
+if(user){var b=h('button',{className:'btn',textContent:d?'✅ عملتها':'علّمها: عملتها'});b.onclick=function(){toggle(o,d)};r.append(b)}
+if(isAdmin){var x=h('button',{className:'btn',textContent:'حذف'});x.onclick=async function(){if(confirm('حذف الفرصة؟')){await sb.from('opps').delete().eq('id',o.id);load()}};r.append(x)}
+L.append(h('div',{className:'card'+(d?' on':'')},[h('h3',{textContent:o.title}),h('div',{className:'meta',textContent:ICON[o.cat]+' '+CATS[o.cat]+' · 📍 '+o.place+(o.deadline?' · آخر موعد: '+o.deadline:'')}),r]))})}
+async function toggle(o,d){if(d){await sb.from('done').delete().eq('opp_id',o.id)}else{await sb.from('done').insert({opp_id:o.id})}loadDone()}
+async function load(){var r=await sb.from('opps').select('*').order('created_at',{ascending:false});if(r.error){$('list').textContent='تعذّر تحميل الفرص.';return}opps=r.data;render()}
+async function loadDone(){done={};if(user){var r=await sb.from('done').select('opp_id');(r.data||[]).forEach(function(x){done[x.opp_id]=1})}render()}
+function adminForm(){$('admin').textContent='';if(!isAdmin)return;var f=h('form'),F={};
+[['title','اسم الفرصة'],['place','المكان (أو أونلاين)'],['deadline','آخر موعد (اختياري)'],['url','رابط (اختياري)']].forEach(function(p){F[p[0]]=h('input',{placeholder:p[1],required:p[0]=='title'||p[0]=='place'});f.append(F[p[0]])});
+F.cat=h('select');CATS.forEach(function(c,i){F.cat.append(h('option',{value:i,textContent:ICON[i]+' '+c}))});f.append(F.cat,h('button',{className:'btn p',textContent:'انشر الفرصة'}));
+f.onsubmit=async function(e){e.preventDefault();var r=await sb.from('opps').insert({title:F.title.value,place:F.place.value,deadline:F.deadline.value||null,url:F.url.value||null,cat:+F.cat.value});if(r.error){alert('تعذّر النشر');return}f.reset();load()};
+$('admin').append(h('div',{className:'card'},[h('b',{textContent:'أضف فرصة جديدة'}),f]))}
+function session(s){user=s?s.user:null;isAdmin=!!user&&user.email.toLowerCase()===CFG.admin;$('auth').textContent=user?'خروج':'دخول بجوجل';adminForm();loadDone()}
+$('auth').onclick=function(){if(user)sb.auth.signOut();else sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.origin+location.pathname}})};
+$('q').oninput=render;chips();load();
+sb.auth.getSession().then(function(r){session(r.data.session)});
+sb.auth.onAuthStateChange(function(_e,s){session(s)});
+</script>
+</body>
+</html>
